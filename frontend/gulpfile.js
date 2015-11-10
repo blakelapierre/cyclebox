@@ -9,6 +9,7 @@ const {dependencies} = require('./package.json'),
       _ = require('lodash'),
       {
         autoprefixer,
+        babel,
         cached,
         changed,
         clean,
@@ -39,6 +40,7 @@ let p = name => print(file => console.log(name, file));
 gulp.task('default', ['build']);
 
 gulp.task('build', sequence(['clean:rev', 'clean:dist'],
+                            ['js:transpile'],
                             ['js:vendor', 'js:app', 'html', 'images', 'styles', 'fonts'],
                             ['minify:css', 'minify:html', 'minify:js', 'minify:images'],
                             'rev'));
@@ -71,6 +73,16 @@ gulp.task('browser-sync',
     ghostMode: false
   }));
 
+gulp.task('js:transpile', ['js:lint'],
+  () => pipe([
+    gulp.src(paths.src.scripts)
+    ,cached('js:transpile')
+    ,p('js:transpile')
+    ,babel({presets: ['es2015']})
+    ,sourcemaps.write('.')
+    ,gulp.dest(paths.transpiled.$)
+  ]));
+
 gulp.task('js:vendor',
   () => pipe([
     browserify()
@@ -82,18 +94,14 @@ gulp.task('js:vendor',
     ,reload({stream: true})
   ]));
 
-gulp.task('js:app', ['js:lint'],
-  () => pipe([
+gulp.task('js:app', ['js:transpile'],
+  () => console.log(paths.transpiled.app) & pipe([
     browserify({
-      entries: [paths.src.app],
+      entries: [paths.transpiled.app],
       debug: true
     })
       .external(_.keys(dependencies))
       .bundle()
-      .on('error', function(err) { // Cannot use => syntax here, as `this` must be set by the caller
-        console.log('js:app', err.stack);
-        this.emit('end');
-      })
     ,source('app.js')
     ,p('js:app')
     ,gulp.dest(paths.dev.$)
@@ -230,6 +238,10 @@ const paths = {
     templates: ['src/modules/**/template.html'],
     vendor: ['!./node_modules/*/node_modules/**']
             .concat(_.map(dependencies, (version, dependency) => { return `./node_modules/${dependency}/**/*.js`; } )),
+  },
+  transpiled: {
+    $: './.transpiled',
+    app: './.transpiled/app.js'
   },
   dev: {
     $: './.dev',
