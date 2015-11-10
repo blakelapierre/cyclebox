@@ -1,8 +1,5 @@
-# base-angular
+# base-cyclejs
 
-#### An advanced, base Angular.js project supporting ECMAScript 6/7, LESS, modularized Angular development, and comes with an out-of-the-box full-featured Gulp.js build and development pipeline.
-
-#### Tuned for rapid web application development and deployment.
 
 ---------------
 
@@ -12,8 +9,8 @@
 
 ##### Install
 ````
-git clone https://github.com/blakelapierre/base-angular
-cd base-angular/frontend
+git clone https://github.com/blakelapierre/base-cyclejs
+cd base-cyclejs/frontend
 npm install
 ````
 
