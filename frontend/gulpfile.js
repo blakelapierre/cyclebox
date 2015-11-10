@@ -95,7 +95,7 @@ gulp.task('js:vendor',
   ]));
 
 gulp.task('js:app', ['js:transpile'],
-  () => console.log(paths.transpiled.app) & pipe([
+  () => pipe([
     browserify({
       entries: [paths.transpiled.app],
       debug: true
