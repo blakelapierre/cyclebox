@@ -1,18 +1,22 @@
-import Rx from 'rx';
 import Cycle from '@cycle/core';
-import CycleDOM from '@cycle/dom';
+import {makeDOMDriver, h} from '@cycle/dom';
 
-function main() {
+function main(drivers) {
   return {
-    DOM: Rx.Observable.interval(1000)
-      .map(i => CycleDOM.h(
-        'h1', '' + i + ' seconds elapsed'
-      ))
+    DOM: drivers.DOM.select('input').events('click')
+      .map(ev => ev.target.checked)
+      .startWith(false)
+      .map(toggled =>
+        h('label', [
+          h('input', {type: 'checkbox'}), 'Toggle me',
+          h('p', toggled ? 'ON' : 'off')
+        ])
+      )
   };
 }
 
 let drivers = {
-  DOM: CycleDOM.makeDOMDriver('#app')
+  DOM: makeDOMDriver('#app')
 };
 
 Cycle.run(main, drivers);
