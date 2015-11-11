@@ -19,13 +19,12 @@ export function labeledSlider(responses) {
   }
 
   function view(state$) {
-    return state$.map(({props, value}) => {
-      const {label, unit, min, max} = props;
-      return h('div.labeled-slider', [
-        h('span.label', [label + ' ' + value + unit]),
-        h('input.slider', {type: 'range', min, max, value})
-      ]);
-    });
+    return state$
+      .map(({props: {label, unit, min, max}, value }) =>
+        h('div.labeled-slider', [
+          h('span.label', [label + ' ' + value + unit]),
+          h('input.slider', {type: 'range', min, max, value})
+        ]));
   }
 
   const events = intent(responses.DOM),
