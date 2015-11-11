@@ -28,15 +28,8 @@ export function labeledSlider(responses) {
     });
   }
 
-  const actions = intent(responses.DOM),
-        DOM = view(model(responses, actions));
+  const events = intent(responses.DOM),
+        DOM = view(model(responses, events));
 
-  const {newValue} = actions;
-
-  return {
-    DOM,
-    events: {
-      newValue
-    }
-  };
+  return {DOM, events};
 }
