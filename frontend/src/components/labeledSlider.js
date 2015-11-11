@@ -2,6 +2,11 @@ import Rx from 'rx';
 import {h} from '@cycle/dom';
 
 export function labeledSlider(responses) {
+  const events = intent(responses.DOM),
+        DOM = view(model(responses, events));
+
+  return {DOM, events};
+
   function intent(DOM) {
     return {
       newValue: DOM.select('.slider').events('input')
@@ -26,9 +31,4 @@ export function labeledSlider(responses) {
           h('input.slider', {type: 'range', min, max, value})
         ]));
   }
-
-  const events = intent(responses.DOM),
-        DOM = view(model(responses, events));
-
-  return {DOM, events};
 }
