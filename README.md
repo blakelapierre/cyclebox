@@ -1,5 +1,6 @@
 # base-cyclejs
 
+Currently demoing a cleaned up version of the BMI demo @ http://cycle.js.org/custom-elements.html
 
 ---------------
 
