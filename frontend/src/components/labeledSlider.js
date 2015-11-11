@@ -3,10 +3,7 @@ import {h} from '@cycle/dom';
 
 
 export function labeledSlider(responses) {
-  const events = intent(responses.DOM),
-        DOM = view(model(responses, events));
-
-  return {DOM, events};
+  return component(responses, intent, model, view);
 
   function intent(DOM) {
     return {
@@ -32,4 +29,11 @@ export function labeledSlider(responses) {
           h('input.slider', {type: 'range', min, max, value})
         ]));
   }
+}
+
+function component(responses, intent, model, view) {
+  const events = intent(responses.DOM),
+        DOM = view(model(responses, events));
+
+  return {DOM, events};
 }
