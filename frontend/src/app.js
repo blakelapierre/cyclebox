@@ -5,11 +5,7 @@ import Cycle from '@cycle/core';
 import {h, makeDOMDriver} from '@cycle/dom';
 
 import {labeledSlider} from './components/labeledSlider';
-
-function calculateBMI(weight, height) {
-  const heightMeters = height * 0.01;
-  return Math.round(weight / (heightMeters * heightMeters));
-}
+import {model} from './bmiModel';
 
 function intent(DOM) {
   return {
@@ -18,21 +14,6 @@ function intent(DOM) {
     changeHeight: DOM.select('#height').events('newValue')
       .map(ev => ev.detail)
   };
-}
-
-function model({changeWeight, changeHeight}) {
-  return Rx.Observable
-    .combineLatest(
-      changeWeight.startWith(70),
-      changeHeight.startWith(170),
-      (weight, height) => {
-        return {
-          weight,
-          height,
-          bmi: calculateBMI(weight, height)
-        };
-      }
-    );
 }
 
 function view(state) {
