@@ -2,6 +2,8 @@ import {h} from '@cycle/dom';
 
 import {model} from './bmiModel';
 
+import {labeledSlider} from './components/labeledSlider';
+
 export function intent(DOM) {
   return {
     changeWeight: DOM.select('#weight').events('newValue')
@@ -32,3 +34,7 @@ export function main({DOM}) {
     DOM: view(model(intent(DOM)))
   };
 }
+
+export const components = {
+  'labeled-slider': labeledSlider
+};
