@@ -1,6 +1,8 @@
 import Rx from 'rx';
 import {h} from '@cycle/dom';
 
+import {component} from './component';
+
 
 export function labeledSlider(responses) {
   return component(responses, intent, model, view);
@@ -29,11 +31,4 @@ export function labeledSlider(responses) {
           h('input.slider', {type: 'range', min, max, value})
         ]));
   }
-}
-
-function component(responses, intent, model, view) {
-  const events = intent(responses.DOM),
-        DOM = view(model(responses, events));
-
-  return {DOM, events};
 }
