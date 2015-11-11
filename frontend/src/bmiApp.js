@@ -2,7 +2,7 @@ import {h} from '@cycle/dom';
 
 import {model} from './bmiModel';
 
-import {labeledSlider} from './components/labeledSlider';
+import {components} from './components';
 
 export function intent(DOM) {
   return {
@@ -35,6 +35,4 @@ export function main({DOM}) {
   };
 }
 
-export const components = {
-  'labeled-slider': labeledSlider
-};
+export const dependencies = components;
