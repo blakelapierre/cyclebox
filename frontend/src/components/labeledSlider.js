@@ -1,6 +1,7 @@
 import Rx from 'rx';
 import {h} from '@cycle/dom';
 
+
 export function labeledSlider(responses) {
   const events = intent(responses.DOM),
         DOM = view(model(responses, events));
