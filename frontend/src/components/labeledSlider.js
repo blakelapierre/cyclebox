@@ -4,14 +4,14 @@ import {h} from '@cycle/dom';
 export function labeledSlider(responses) {
   function intent(DOM) {
     return {
-      changeValue$: DOM.select('.slider').events('input')
+      newValue: DOM.select('.slider').events('input')
         .map(ev => ev.target.value)
     };
   }
 
-  function model({props}, {changeValue$}) {
+  function model({props}, {newValue}) {
     const initialValue$ = props.get('initial').first(),
-          value$ = initialValue$.concat(changeValue$),
+          value$ = initialValue$.concat(newValue),
           props$ = props.getAll();
 
     return Rx.Observable
@@ -31,10 +31,12 @@ export function labeledSlider(responses) {
   const actions = intent(responses.DOM),
         DOM = view(model(responses, actions));
 
+  const {newValue} = actions;
+
   return {
     DOM,
     events: {
-      newValue: actions.changeValue$
+      newValue
     }
   };
 }
