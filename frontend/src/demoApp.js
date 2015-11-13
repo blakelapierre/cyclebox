@@ -35,7 +35,7 @@ export function model({changeXMin, changeYMin, changeWidth, changeHeight, change
       (xMin, yMin, width, height, projection) =>
       ({xMin, yMin, width, height, projection})
     )
-    .debounce(1000);
+    .debounce(0);
 }
 
 export function view(state) {
@@ -52,11 +52,11 @@ export function view(state) {
         min: 1, initial: yMin, max: Math.pow(2, 12)
       }),
       h('labeled-slider#width', {
-        key: 2, label: 'width',
+        key: 3, label: 'width',
         min: Math.pow(2, 5), initial: width, max: Math.pow(2, 12)
       }),
       h('labeled-slider#height', {
-        key: 2, label: 'height',
+        key: 4, label: 'height',
         min: Math.pow(2, 4), initial: height, max: Math.pow(2, 12)
       }),
       h('select#projection'),
