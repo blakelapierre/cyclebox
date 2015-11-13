@@ -75,7 +75,10 @@ gulp.task('mathbox',
 
 gulp.task('browser-sync',
   () => browserSync({
-    server: paths.dev.$,
+    server: {
+      baseDir: paths.dev.$,
+      https: true
+    },
     ghostMode: false
   }));
 
