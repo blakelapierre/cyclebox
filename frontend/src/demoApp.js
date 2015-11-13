@@ -76,14 +76,14 @@ export const dependencies = components;
 
 
 var mathbox = mathBox({
-  plugins: ['core', 'controls', 'cursor'/*, 'stats'*/],
+  plugins: ['core', 'controls', 'cursor', 'stats'],
   controls: {
     klass: THREE.OrbitControls
   },
 });
 var three = mathbox.three;
 
-three.camera.position.set(1, 1, 5);
+three.camera.position.set(-5, 5, 0);
 
 three.renderer.setClearColor(new THREE.Color(0x000000), 1.0);
 
@@ -203,6 +203,7 @@ function buildProjection(name, x_min, x_max, y_min, y_max) {
     // range: [[x_min, x_max], [y_min, y_max], [z_min, z_max]],
     scale: projection.scale || [1, 1, 1],
     position: [0, 0, 0],
+    // quaternion: [0, 0, 1, 1]
   };
 
   if (projection.helix) options.helix = projection.helix;
