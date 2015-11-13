@@ -1,7 +1,7 @@
 import Rx from 'rx';
 import {h} from '@cycle/dom';
 
-import {component} from './component';
+import {component} from '../component';
 
 export function labeledSlider(responses) {
   return component(responses, intent, model, view);
@@ -27,7 +27,8 @@ function view(state$) {
   return state$
     .map(({props: {label, unit, min, max}, value }) =>
       h('div.labeled-slider', [
-        h('span.label', [label + ' ' + value + unit]),
-        h('input.slider', {type: 'range', min, max, value})
+        h('span.label', [label]),
+        h('input.slider', {type: 'range', min, max, value}),
+        h('span.label', [value]),
       ]));
 }

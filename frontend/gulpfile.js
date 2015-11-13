@@ -39,7 +39,7 @@ let p = name => print(file => console.log(name, file));
 
 gulp.task('default', ['build']);
 
-gulp.task('build', sequence(['clean:rev', 'clean:dist'],
+gulp.task('build', sequence(['clean:transpiled', 'clean:rev', 'clean:dist'],
                             ['js:transpile'],
                             ['js:vendor', 'js:app', 'html', 'images', 'styles', 'fonts'],
                             ['minify:css', 'minify:html', 'minify:js', 'minify:images'],
@@ -48,7 +48,7 @@ gulp.task('build', sequence(['clean:rev', 'clean:dist'],
 gulp.task('dev', cb => {
   const {src} = paths;
 
-  sequence('clean:dev',
+  sequence(['clean:dev', 'clean:transpiled'],
           ['js:vendor', 'js:app', 'html', 'images'],
           'styles',
           'browser-sync')(cb);
@@ -67,6 +67,12 @@ gulp.task('dev', cb => {
       });
 });
 
+gulp.task('mathbox',
+  () => pipe([
+    gulp.src(paths.src.mathbox)
+    ,gulp.dest(paths.dev.$)
+  ]));
+
 gulp.task('browser-sync',
   () => browserSync({
     server: paths.dev.$,
@@ -83,7 +89,7 @@ gulp.task('js:transpile', ['js:lint'],
     ,gulp.dest(paths.transpiled.$)
   ]));
 
-gulp.task('js:vendor',
+gulp.task('js:vendor', ['mathbox'],
   () => pipe([
     browserify()
       .require(_.keys(dependencies))
@@ -100,7 +106,7 @@ gulp.task('js:app', ['js:transpile'],
       entries: [paths.transpiled.app],
       debug: true
     })
-      .external(_.keys(dependencies))
+      .external(_.keys(dependencies).concat(['MathBox']))
       .bundle()
     ,source('app.js')
     ,p('js:app')
@@ -218,7 +224,7 @@ gulp.task('rev',
   });
 })('minify'); // Is there a way to get 'minify' to occur before the code...without verbosity?
 
-((task) => _.each(['dev', 'dist', 'rev'],
+((task) => _.each(['dev', 'transpiled', 'dist', 'rev'],
   version =>
     gulp.task(`${task}:${version}`,
       () => pipe([
@@ -238,6 +244,7 @@ const paths = {
     templates: ['src/modules/**/template.html'],
     vendor: ['!./node_modules/*/node_modules/**']
             .concat(_.map(dependencies, (version, dependency) => { return `./node_modules/${dependency}/**/*.js`; } )),
+    mathbox: ['./node_modules/mathbox/build/mathbox-bundle.js']
   },
   transpiled: {
     $: './.transpiled',

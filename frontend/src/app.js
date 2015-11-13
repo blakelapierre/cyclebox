@@ -4,7 +4,7 @@ import Rx from 'rx';
 import Cycle from '@cycle/core';
 import {h, makeDOMDriver} from '@cycle/dom';
 
-import {main, dependencies} from './bmiApp';
+import {main, dependencies} from './demoApp';
 
 Cycle.run(main, {
   DOM: makeDOMDriver('#app', dependencies)
