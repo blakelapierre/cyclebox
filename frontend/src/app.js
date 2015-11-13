@@ -7,5 +7,5 @@ import {h, makeDOMDriver} from '@cycle/dom';
 import {main, dependencies} from './demoApp';
 
 Cycle.run(main, {
-  DOM: makeDOMDriver('#app', dependencies)
+  DOM: makeDOMDriver('#demo', dependencies)
 });

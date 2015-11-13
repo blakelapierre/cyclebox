@@ -20,7 +20,7 @@ export function intent(DOM) {
     changeYMin: DOM.select('#yMin').events('newValue').map(ev => parseInt(ev.detail)),
     changeWidth: DOM.select('#width').events('newValue').map(ev => parseInt(ev.detail)),
     changeHeight: DOM.select('#height').events('newValue').map(ev => parseInt(ev.detail)),
-    changeProjection: DOM.select('#projection').events('change').map(ev => ev.detail)
+    changeProjection: DOM.select('#projection').events('change').map(ev => ev.target.value)
   };
 }
 
@@ -59,7 +59,11 @@ export function view(state) {
         key: 4, label: 'height',
         min: Math.pow(2, 4), initial: height, max: Math.pow(2, 12)
       }),
-      h('select#projection'),
+      h('select#projection', [
+        h('option', {text: 'Cartesian', value: 'cartesian', selected: projection === 'cartesian'}), //wtf
+        h('option', {text: 'Polar',     value: 'polar',     selected: projection === 'polar'}),
+        h('option', {text: 'Spherical', value: 'spherical', selected: projection === 'spherical'})
+      ]),
       // h('number-model') //useless
     ]);
   });

@@ -1,4 +1,4 @@
-# cycle.js x mathbox
+# [cycle.js](http://cycle.js.org/) x [mathbox](https://gitgud.io/unconed/mathbox)
 
 Testing
 
@@ -6,13 +6,17 @@ Testing
 
  First, make sure you have gulpur installed so that you can use ECMAScript 6 features in the gulpfile. This allows more concise syntax and is thus easier to read.
 
+
 `npm install -g gulpur`
+
+[Note: there is another way to do this with gulp and/or babel. Should investigate. I believe it requires changing the name of the gulpfile though.]
 
 ##### Install
 ````
-git clone https://github.com/blakelapierre/base-cyclejs
-cd base-cyclejs/frontend
-npm install
+git clone https://github.com/blakelapierre/cyclebox
+cd cyclebox
+./install.sh
+cd frontend
 ````
 
 

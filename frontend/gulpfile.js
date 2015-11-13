@@ -210,7 +210,7 @@ gulp.task('rev',
 ((task) => {
   _.each({
     css:    {fn: minifyCss},
-    js:     {fn: uglify, src: ({dev}) => [dev.app].concat([dev.vendor])},
+    js:     {fn: uglify, src: ({dev}) => [dev.app].concat(dev.vendor)},
     html:   {fn: () => minifyHtml({quotes: true})},
     images: {fn: imagemin, src: ({dev}) => [dev.sprites]}
   }, ({dest, fn, src}, part) => {
@@ -261,7 +261,8 @@ const paths = {
     html: './.dev/index.html',
     images: './.dev/**/*.{svg,gif,png,jpg}',
     sprites: './.dev/sprites.png',
-    vendor: './.dev/vendor.js'
+    vendor: ['./.dev/vendor.js', './.dev/mathbox-bundle.js'], // get this mathbox stuff out of here some how?
+
   },
   rev: {
     $: './.rev',
