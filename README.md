@@ -1,6 +1,18 @@
 # [cycle.js](http://cycle.js.org/) x [mathbox](https://gitgud.io/unconed/mathbox)
 
-Testing
+Testing an integration between the above two libraries.
+
+I've barely worked with cycle.js, but am familiar with FRP. I've been looking for a new web framework, so this is project is currently just a demo application to explore some possibilities.
+
+The current demo application computes which integers divide which other integers, which you can slice through in a couple ways.
+
+
+
+[demo](http://blakelapierre.github.io/cyclebox/)
+
+
+![screen.png](screen.png)
+
 
 ---------------
 
