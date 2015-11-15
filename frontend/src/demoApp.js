@@ -9,10 +9,11 @@ const defaults = {
   yMin: 1,
   width: Math.pow(2, 5),
   height: Math.pow(2, 4),
-  projection: 'polar'
+  projection: 'polar',
+  pointSize: 1
 };
 
-const {xMin, yMin, width, height, projection} = defaults;
+const {xMin, yMin, width, height, projection, pointSize} = defaults;
 
 export function intent(DOM) {
   return {
@@ -20,11 +21,12 @@ export function intent(DOM) {
     changeYMin: DOM.select('#yMin').events('newValue').map(ev => parseInt(ev.detail)),
     changeWidth: DOM.select('#width').events('newValue').map(ev => parseInt(ev.detail)),
     changeHeight: DOM.select('#height').events('newValue').map(ev => parseInt(ev.detail)),
-    changeProjection: DOM.select('#projection').events('change').map(ev => ev.target.value)
+    changeProjection: DOM.select('#projection').events('change').map(ev => ev.target.value),
+    changePointSize: DOM.select('#pointSize').events('newValue').map(ev => parseInt(ev.detail))
   };
 }
 
-export function model({changeXMin, changeYMin, changeWidth, changeHeight, changeProjection}) {
+export function model({changeXMin, changeYMin, changeWidth, changeHeight, changeProjection, changePointSize}) {
   return Rx.Observable
     .combineLatest(
       changeXMin.startWith(xMin),
@@ -32,15 +34,18 @@ export function model({changeXMin, changeYMin, changeWidth, changeHeight, change
       changeWidth.startWith(width),
       changeHeight.startWith(height),
       changeProjection.startWith(projection),
-      (xMin, yMin, width, height, projection) =>
-      ({xMin, yMin, width, height, projection})
+      changePointSize.startWith(pointSize),
+      (xMin, yMin, width, height, projection, pointSize) =>
+      ({xMin, yMin, width, height, projection, pointSize})
     )
     .debounce(0);
 }
 
 export function view(state) {
-  return state.map(({xMin, yMin, width, height, projection}) => {
-    setView({xMin, yMin, width, height, projection});
+  return state.map(config => {
+    setView(config);
+
+    const {xMin, yMin, width, height, projection, pointSize} = config;
 
     return h('div', [
       h('labeled-slider#xMin', {
@@ -64,6 +69,10 @@ export function view(state) {
         h('option', {text: 'Polar',     value: 'polar',     selected: projection === 'polar'}),
         h('option', {text: 'Spherical', value: 'spherical', selected: projection === 'spherical'})
       ]),
+      h('labeled-slider#pointSize', {
+        key: 5, label: 'pointSize',
+        min: 1, initial: pointSize, max: 20
+      })
       // h('number-model') //useless
     ]);
   });
@@ -97,12 +106,12 @@ function clear() {
   if (view.length > 0) view.remove();
 }
 
-function setView({xMin, yMin, width, height, projection}) {
+function setView({xMin, yMin, width, height, projection, pointSize}) {
   clear();
-  addView(xMin, yMin, width, height, projection);
+  addView(xMin, yMin, width, height, projection, pointSize);
 }
 
-function addView(x_min, y_min, width, height, projection) {
+function addView(x_min, y_min, width, height, projection, pointSize) {
   x_min = x_min || 1;
   y_min =  y_min || 1;
 
@@ -142,7 +151,7 @@ function addView(x_min, y_min, width, height, projection) {
     .point({
       color: [68/255, 174/255, 218/255],
       // colors: 'area',
-      size: 1,
+      size: pointSize || 1,
       blending: 'add',
       shape: 'square',
       opacity: 0.8,
