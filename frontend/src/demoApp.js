@@ -58,11 +58,11 @@ export function view(state) {
       }),
       h('labeled-slider#width', {
         key: 3, label: 'width',
-        min: Math.pow(2, 5), initial: width, max: Math.pow(2, 12)
+        min: Math.pow(2, 1), initial: width, max: Math.pow(2, 12)
       }),
       h('labeled-slider#height', {
         key: 4, label: 'height',
-        min: Math.pow(2, 4), initial: height, max: Math.pow(2, 12)
+        min: Math.pow(2, 1), initial: height, max: Math.pow(2, 12)
       }),
       h('select#projection', [
         h('option', {text: 'Cartesian', value: 'cartesian', selected: projection === 'cartesian'}), //wtf
@@ -73,7 +73,6 @@ export function view(state) {
         key: 5, label: 'pointSize',
         min: 1, initial: pointSize, max: 20
       })
-      // h('number-model') //useless
     ]);
   });
 }
@@ -85,7 +84,6 @@ export function main({DOM}) {
 }
 
 export const dependencies = components;
-
 
 
 var mathbox = mathBox({
@@ -106,12 +104,12 @@ function clear() {
   if (view.length > 0) view.remove();
 }
 
-function setView({xMin, yMin, width, height, projection, pointSize}) {
+function setView(config) {
   clear();
-  addView(xMin, yMin, width, height, projection, pointSize);
+  addView(config);
 }
 
-function addView(x_min, y_min, width, height, projection, pointSize) {
+function addView({x_min, y_min, width, height, projection, pointSize}) {
   x_min = x_min || 1;
   y_min =  y_min || 1;
 
@@ -120,25 +118,10 @@ function addView(x_min, y_min, width, height, projection, pointSize) {
 
   projection = projection || 'cartesian';
 
-  var x_max = x_min + width - 1,
-      y_max = y_min + height - 1;
+  const x_max = x_min + width - 1,
+        y_max = y_min + height - 1;
 
-  var view = buildProjection(projection, x_min, x_max, y_min, y_max);
-
-  console.log({view});
-
-  // var camera = view.camera({
-  //   lookAt: [0, 0, 0],
-  //   position: [0, 0, 5]
-  // }
-  // // , {
-  // //   position: function (t) { return [-3 * Math.cos(t) + 1, .4 * Math.cos(t * .381) + 1, -30 * Math.sin(t) + 1] },
-  // // }
-  // );
-
-  // view.camera({
-  //   lookAt: [0, 0, 0]
-  // });
+  const view = buildProjection(projection, x_min, x_max, y_min, y_max);
 
   view
     .area({
@@ -161,9 +144,7 @@ function addView(x_min, y_min, width, height, projection, pointSize) {
 }
 
 function divisors(emit, x, y, i, j, t) {
-  // if (x > 0 && y > 0 && x % y === 0) emit(x, y, Math.sqrt(y));
   if (x > 0 && y > 0 && x % y === 0) emit(x, y, y);
-  // if (x > 0 && y > 0 && x % y === 0) emit(x, y, Math.sqrt(y));
 }
 
 const projections = {
@@ -172,13 +153,13 @@ const projections = {
   },
   'polar': {
     // x: function(min, max) { return [min, Math.sqrt(max)]; },
-    x: function(min, max) { return [min, max]; },
-    range: function(x_min, x_max, y_min, y_max, z_min, z_max) { return [[x_min, x_max], [Math.round(Math.sqrt(y_min)), Math.round(Math.sqrt(y_max))], [Math.round(Math.sqrt(z_min)), Math.round(Math.sqrt(z_max))]]; },
+    x: (min, max) => [min, max],
+    range: (x_min, x_max, y_min, y_max, z_min, z_max) => [[x_min, x_max], [Math.round(Math.sqrt(y_min)), Math.round(Math.sqrt(y_max))], [Math.round(Math.sqrt(z_min)), Math.round(Math.sqrt(z_max))]],
     helix: 0.01
   },
   'spherical': {
-    x: function(min, max) { return [min, Math.sqrt(max)]; },
-    range: function(x_min, x_max, y_min, y_max, z_min, z_max) { return [[x_min, x_max], [y_min, y_max], [Math.round(Math.sqrt(z_min)), Math.round(Math.sqrt(z_max))]]; },
+    x: (min, max) => [min, Math.sqrt(max)],
+    range: (x_min, x_max, y_min, y_max, z_min, z_max) => [[x_min, x_max], [y_min, y_max], [Math.round(Math.sqrt(z_min)), Math.round(Math.sqrt(z_max))]],
     scale: [16/9, 1, 1]
   }
 };
@@ -205,18 +186,12 @@ function buildProjection(name, x_min, x_max, y_min, y_max) {
     y_max = range[1][1];
     z_min = range[2][0];
     z_max = range[2][1];
-
-    console.log('range', range);
   }
-
-  console.log('Projecting', name, x_min, x_max, y_min, y_max, z_min, z_max);
 
   const options = {
     range: [[x_min, x_max], [y_min, y_max], [z_min, z_max]],
-    // range: [[x_min, x_max], [y_min, y_max], [z_min, z_max]],
     scale: projection.scale || [1, 1, 1],
     position: [0, 0, 0],
-    // quaternion: [0, 0, 1, 1]
   };
 
   if (projection.helix) options.helix = projection.helix;
