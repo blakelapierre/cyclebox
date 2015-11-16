@@ -10,10 +10,11 @@ const defaults = {
   width: Math.pow(2, 5),
   height: Math.pow(2, 4),
   projection: 'polar',
+  helix: false,
   pointSize: 1
 };
 
-const {xMin, yMin, width, height, projection, pointSize} = defaults;
+const {xMin, yMin, width, height, projection, helix, pointSize} = defaults;
 
 export function intent(DOM) {
   return {
@@ -22,11 +23,16 @@ export function intent(DOM) {
     changeWidth: DOM.select('#width').events('newValue').map(ev => parseInt(ev.detail)),
     changeHeight: DOM.select('#height').events('newValue').map(ev => parseInt(ev.detail)),
     changeProjection: DOM.select('#projection').events('change').map(ev => ev.target.value),
+    changeHelix: DOM.select('#helix').events('change').map(ev => ev.target.checked),
     changePointSize: DOM.select('#pointSize').events('newValue').map(ev => parseInt(ev.detail))
   };
 }
 
-export function model({changeXMin, changeYMin, changeWidth, changeHeight, changeProjection, changePointSize}) {
+// export const model = () =>{
+//   return combineAll();
+// };
+
+export function model({changeXMin, changeYMin, changeWidth, changeHeight, changeProjection, changeHelix, changePointSize}) {
   return Rx.Observable
     .combineLatest(
       changeXMin.startWith(xMin),
@@ -34,9 +40,10 @@ export function model({changeXMin, changeYMin, changeWidth, changeHeight, change
       changeWidth.startWith(width),
       changeHeight.startWith(height),
       changeProjection.startWith(projection),
+      changeHelix.startWith(helix),
       changePointSize.startWith(pointSize),
-      (xMin, yMin, width, height, projection, pointSize) =>
-      ({xMin, yMin, width, height, projection, pointSize})
+      (xMin, yMin, width, height, projection, helix, pointSize) =>
+      ({xMin, yMin, width, height, projection, helix, pointSize})
     )
     .debounce(0);
 }
@@ -45,16 +52,16 @@ export function view(state) {
   return state.map(config => {
     setView(config);
 
-    const {xMin, yMin, width, height, projection, pointSize} = config;
+    const {xMin, yMin, width, height, projection, helix, pointSize} = config;
 
     return h('div', [
       h('labeled-slider#xMin', {
         key: 1, label: 'xMin',
-        min: 1, initial: xMin, max: Math.pow(2, 12)
+        min: 1, initial: xMin, max: Math.pow(2, 15)
       }),
       h('labeled-slider#yMin', {
         key: 2, label: 'yMin',
-        min: 1, initial: yMin, max: Math.pow(2, 12)
+        min: 1, initial: yMin, max: Math.pow(2, 15)
       }),
       h('labeled-slider#width', {
         key: 3, label: 'width',
@@ -64,10 +71,16 @@ export function view(state) {
         key: 4, label: 'height',
         min: Math.pow(2, 1), initial: height, max: Math.pow(2, 12)
       }),
-      h('select#projection', [
-        h('option', {text: 'Cartesian', value: 'cartesian', selected: projection === 'cartesian'}), //wtf
-        h('option', {text: 'Polar',     value: 'polar',     selected: projection === 'polar'}),
-        h('option', {text: 'Spherical', value: 'spherical', selected: projection === 'spherical'})
+      h('div', [
+        h('select#projection', [
+          h('option', {text: 'Cartesian', value: 'cartesian', selected: projection === 'cartesian'}), //wtf
+          h('option', {text: 'Polar',     value: 'polar',     selected: projection === 'polar'}),
+          h('option', {text: 'Spherical', value: 'spherical', selected: projection === 'spherical'})
+        ]),
+        h('label', [
+          'Helix',
+          h('input#helix', {type: 'checkbox', 'class': projection === 'polar' ? '' : 'hidden', value: helix === 'true'})
+        ])
       ]),
       h('labeled-slider#pointSize', {
         key: 5, label: 'pointSize',
@@ -109,7 +122,7 @@ function setView(config) {
   addView(config);
 }
 
-function addView({x_min, y_min, width, height, projection, pointSize}) {
+function addView({xMin: x_min, yMin: y_min, width, height, projection, helix, pointSize}) {
   x_min = x_min || 1;
   y_min =  y_min || 1;
 
@@ -121,13 +134,13 @@ function addView({x_min, y_min, width, height, projection, pointSize}) {
   const x_max = x_min + width - 1,
         y_max = y_min + height - 1;
 
-  const view = buildProjection(projection, x_min, x_max, y_min, y_max);
+  const view = buildProjection(projection, x_min, x_max, y_min, y_max, helix);
 
   view
-    .area({
+    .matrix({
       width ,
       height ,
-      axes: [1, 2],
+      // axes: [1, 2],
       channels: 3,
       expr: divisors,
     })
@@ -164,7 +177,7 @@ const projections = {
   }
 };
 
-function buildProjection(name, x_min, x_max, y_min, y_max) {
+function buildProjection(name, x_min, x_max, y_min, y_max, helix) {
   let z_min = y_min,
       z_max = y_max;
 
@@ -194,7 +207,12 @@ function buildProjection(name, x_min, x_max, y_min, y_max) {
     position: [0, 0, 0],
   };
 
-  if (projection.helix) options.helix = projection.helix;
+  if (projection.helix) {
+    options.helix = projection.helix;
+    options.helix = helix ? 0.01 : undefined;
+  }
+
+  console.log('build', helix, options);
 
   return mathbox[name](options);
 }
