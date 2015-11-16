@@ -77,7 +77,7 @@ export function view(state) {
           h('option', {text: 'Polar',     value: 'polar',     selected: projection === 'polar'}),
           h('option', {text: 'Spherical', value: 'spherical', selected: projection === 'spherical'})
         ]),
-        h('label', [
+        h(`label#helixLabel${projection === 'polar' ? '.visible' : ''}`, [
           'Helix',
           h('input#helix', {type: 'checkbox', 'class': projection === 'polar' ? '' : 'hidden', value: helix === 'true'})
         ])
