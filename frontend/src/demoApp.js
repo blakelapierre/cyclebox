@@ -49,8 +49,9 @@ export function model({changeXMin, changeYMin, changeWidth, changeHeight, change
       changeHelix.startWith(helix),
       changeHelixValue.startWith(helixValue),
       changePointSize.startWith(pointSize),
-      (xMin, yMin, width, height, projection, helix, helixValue, pointSize) =>
-      ({xMin, yMin, width, height, projection, helix, helixValue, pointSize})
+      (...args) => args
+      // (xMin, yMin, width, height, projection, helix, helixValue, pointSize) =>
+      // ({xMin, yMin, width, height, projection, helix, helixValue, pointSize})
     )
     .debounce(0);
 }
@@ -61,24 +62,24 @@ export function view(state) {
 
     console.log({config});
 
-    const {xMin, yMin, width, height, projection, helix, helixValue, pointSize} = config;
+    const [xMin, yMin, width, height, projection, helix, helixValue, pointSize] = config;
 
     return h('div', [
       h('labeled-slider#xMin', {
         key: 1, label: 'xMin',
-        min: 1, initial: xMin, max: Math.pow(2, 15)
+        min: -Math.pow(2, 5), initial: xMin, max: Math.pow(2, 5)
       }),
       h('labeled-slider#yMin', {
         key: 2, label: 'yMin',
-        min: 1, initial: yMin, max: Math.pow(2, 15)
+        min: -Math.pow(2, 5), initial: yMin, max: Math.pow(2, 5)
       }),
       h('labeled-slider#width', {
         key: 3, label: 'width',
-        min: Math.pow(2, 1), initial: width, max: Math.pow(2, 12)
+        min: Math.pow(2, 0), initial: width, max: Math.pow(2, 14)
       }),
       h('labeled-slider#height', {
         key: 4, label: 'height',
-        min: Math.pow(2, 1), initial: height, max: Math.pow(2, 12)
+        min: Math.pow(2, 0), initial: height, max: Math.pow(2, 13)
       }),
       h('div', [
         h('select#projection', [
@@ -88,12 +89,14 @@ export function view(state) {
         ]),
         h(`label#helixLabel${projection === 'polar' ? '.visible' : ''}`, [
           'Helix',
-          h('input#helix', {type: 'checkbox', value: helix === 'true'}),
-          h('labeled-slider#helixValue', {
-            key: 5, label: 'helix value',
-            min: 0.0001, max: 1, step: 0.001,
-            initial: 0.001
-          })
+          h('input#helix', {type: 'checkbox', value: helix}),
+          h(`div${helix ? '.visible' : '.hidden'}`, [
+            h('labeled-slider#helixValue', {
+              key: 5, label: 'helix value',
+              min: 0.0001, max: 2, step: 0.0001,
+              initial: 0.001
+            })
+          ])
         ])
       ]),
       h('labeled-slider#pointSize', {
@@ -121,9 +124,15 @@ var mathbox = mathBox({
 });
 var three = mathbox.three;
 
-three.camera.position.set(-5, 5, 0);
+// three.camera.position.set(-5, 5, 0);
 
 three.renderer.setClearColor(new THREE.Color(0x000000), 1.0);
+
+const camera = mathbox.camera({
+  proxy: true,
+  position: [0, 0, 2],
+  fov: 60
+});
 
 function clear() {
   var view = mathbox.select('');
@@ -136,7 +145,7 @@ function setView(config) {
   addView(config);
 }
 
-function addView({xMin: x_min, yMin: y_min, width, height, projection, helix, helixValue, pointSize}) {
+function addView([x_min, y_min, width, height, projection, helix, helixValue, pointSize]) {
   x_min = x_min || 1;
   y_min =  y_min || 1;
 
@@ -156,7 +165,7 @@ function addView({xMin: x_min, yMin: y_min, width, height, projection, helix, he
       height ,
       // axes: [1, 2],
       channels: 3,
-      expr: divisors,
+      expr: divisors(x_min, y_min),
     })
     .point({
       color: [68/255, 174/255, 218/255],
@@ -170,24 +179,42 @@ function addView({xMin: x_min, yMin: y_min, width, height, projection, helix, he
     });
 }
 
-function divisors(emit, x, y, i, j, t) {
-  if (x > 0 && y > 0 && x % y === 0) emit(x, y, y);
+function divisors(x_min, y_min) {
+  return (emit, x, y, i, j, t) => {
+    x = x + x_min;
+    y = y + y_min;
+
+    if (x !== 0 && y !== 0 && x % y === 0) emit(x, y, Math.log(x));
+  };
 }
 
 const projections = {
   'cartesian': {
-    scale: [16/9, 1, 1]
+    scale: (width, height) => [16/9, 1, 1]
   },
   'polar': {
     // x: function(min, max) { return [min, Math.sqrt(max)]; },
     x: (min, max) => [min, max],
-    range: (x_min, x_max, y_min, y_max, z_min, z_max) => [[x_min, x_max], [Math.round(Math.sqrt(y_min)), Math.round(Math.sqrt(y_max))], [Math.round(Math.sqrt(z_min)), Math.round(Math.sqrt(z_max))]],
+    range: (x_min, x_max, y_min, y_max, z_min, z_max) =>
+            [
+              [x_min * 2 * Math.PI, x_max * 2 * Math.PI],
+              [y_min, y_max],
+              [Math.round(Math.sqrt(Math.abs(z_min))), Math.round(Math.sqrt(Math.abs(z_max)))]
+            ],
+    // range: (x_min, x_max, y_min, y_max, z_min, z_max) => [[x_min, x_max], [Math.round(Math.sqrt(y_min)), Math.round(Math.sqrt(y_max))], [Math.round(Math.sqrt(z_min)), Math.round(Math.sqrt(z_max))]],
+    scale: (width, height) => [16/9, 1, 1],
     helix: 0.01
   },
   'spherical': {
     x: (min, max) => [min, Math.sqrt(max)],
-    range: (x_min, x_max, y_min, y_max, z_min, z_max) => [[x_min, x_max], [y_min, y_max], [Math.round(Math.sqrt(z_min)), Math.round(Math.sqrt(z_max))]],
-    scale: [16/9, 1, 1]
+    range: (x_min, x_max, y_min, y_max, z_min, z_max) =>
+            [
+              [x_min, x_max],
+              [y_min, y_max],
+              [Math.log(z_min), Math.log(z_max)]
+              // [Math.round(Math.sqrt(z_min)), Math.round(Math.sqrt(z_max))]
+            ],
+    scale: (width, height) => [16/9, 1, 1]
   }
 };
 
@@ -215,18 +242,20 @@ function buildProjection(name, x_min, x_max, y_min, y_max, helix, helixValue) {
     z_max = range[2][1];
   }
 
+  const width = x_max - x_min + 1,
+        height = y_max - y_min + 1;
   const options = {
     range: [[x_min, x_max], [y_min, y_max], [z_min, z_max]],
-    scale: projection.scale || [1, 1, 1],
-    position: [0, 0, 0],
+    scale: projection.scale ? projection.scale(width, height) : [1, 1, 1],
+    position: [Math.sqrt(Math.PI), 0, 0],
   };
 
-  if (projection.helix) {
+  if (name === 'polar' && helix) {
     options.helix = projection.helix;
     options.helix = helixValue;
   }
 
   console.log('build', helix, options);
 
-  return mathbox.stereographic4()[name](options);
+  return mathbox[name](options);
 }
