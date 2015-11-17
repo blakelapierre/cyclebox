@@ -11,28 +11,34 @@ const defaults = {
   height: Math.pow(2, 4),
   projection: 'polar',
   helix: false,
+  helixValue: 0.01,
   pointSize: 1
 };
 
-const {xMin, yMin, width, height, projection, helix, pointSize} = defaults;
+const {xMin, yMin, width, height, projection, helix, helixValue, pointSize} = defaults;
 
 export function intent(DOM) {
   return {
-    changeXMin: DOM.select('#xMin').events('newValue').map(ev => parseInt(ev.detail)),
-    changeYMin: DOM.select('#yMin').events('newValue').map(ev => parseInt(ev.detail)),
-    changeWidth: DOM.select('#width').events('newValue').map(ev => parseInt(ev.detail)),
-    changeHeight: DOM.select('#height').events('newValue').map(ev => parseInt(ev.detail)),
+    changeXMin: DOM.select('#xMin').events('newValue').map(parseIntFromDetail),
+    changeYMin: DOM.select('#yMin').events('newValue').map(parseIntFromDetail),
+    changeWidth: DOM.select('#width').events('newValue').map(parseIntFromDetail),
+    changeHeight: DOM.select('#height').events('newValue').map(parseIntFromDetail),
     changeProjection: DOM.select('#projection').events('change').map(ev => ev.target.value),
     changeHelix: DOM.select('#helix').events('change').map(ev => ev.target.checked),
-    changePointSize: DOM.select('#pointSize').events('newValue').map(ev => parseInt(ev.detail))
+    changeHelixValue: DOM.select('#helixValue').events('newValue').map(parseFloatFromDetail),
+    changePointSize: DOM.select('#pointSize').events('newValue').map(parseIntFromDetail)
   };
 }
+
+// these can throw exceptions
+function parseIntFromDetail({detail}) { return parseInt(detail); }
+function parseFloatFromDetail({detail}) { return parseFloat(detail); }
 
 // export const model = () =>{
 //   return combineAll();
 // };
 
-export function model({changeXMin, changeYMin, changeWidth, changeHeight, changeProjection, changeHelix, changePointSize}) {
+export function model({changeXMin, changeYMin, changeWidth, changeHeight, changeProjection, changeHelix, changeHelixValue, changePointSize}) {
   return Rx.Observable
     .combineLatest(
       changeXMin.startWith(xMin),
@@ -41,9 +47,10 @@ export function model({changeXMin, changeYMin, changeWidth, changeHeight, change
       changeHeight.startWith(height),
       changeProjection.startWith(projection),
       changeHelix.startWith(helix),
+      changeHelixValue.startWith(helixValue),
       changePointSize.startWith(pointSize),
-      (xMin, yMin, width, height, projection, helix, pointSize) =>
-      ({xMin, yMin, width, height, projection, helix, pointSize})
+      (xMin, yMin, width, height, projection, helix, helixValue, pointSize) =>
+      ({xMin, yMin, width, height, projection, helix, helixValue, pointSize})
     )
     .debounce(0);
 }
@@ -52,7 +59,9 @@ export function view(state) {
   return state.map(config => {
     setView(config);
 
-    const {xMin, yMin, width, height, projection, helix, pointSize} = config;
+    console.log({config});
+
+    const {xMin, yMin, width, height, projection, helix, helixValue, pointSize} = config;
 
     return h('div', [
       h('labeled-slider#xMin', {
@@ -79,11 +88,16 @@ export function view(state) {
         ]),
         h(`label#helixLabel${projection === 'polar' ? '.visible' : ''}`, [
           'Helix',
-          h('input#helix', {type: 'checkbox', 'class': projection === 'polar' ? '' : 'hidden', value: helix === 'true'})
+          h('input#helix', {type: 'checkbox', value: helix === 'true'}),
+          h('labeled-slider#helixValue', {
+            key: 5, label: 'helix value',
+            min: 0.0001, max: 1, step: 0.001,
+            initial: 0.001
+          })
         ])
       ]),
       h('labeled-slider#pointSize', {
-        key: 5, label: 'pointSize',
+        key: 6, label: 'pointSize',
         min: 1, initial: pointSize, max: 20
       })
     ]);
@@ -122,7 +136,7 @@ function setView(config) {
   addView(config);
 }
 
-function addView({xMin: x_min, yMin: y_min, width, height, projection, helix, pointSize}) {
+function addView({xMin: x_min, yMin: y_min, width, height, projection, helix, helixValue, pointSize}) {
   x_min = x_min || 1;
   y_min =  y_min || 1;
 
@@ -134,7 +148,7 @@ function addView({xMin: x_min, yMin: y_min, width, height, projection, helix, po
   const x_max = x_min + width - 1,
         y_max = y_min + height - 1;
 
-  const view = buildProjection(projection, x_min, x_max, y_min, y_max, helix);
+  const view = buildProjection(projection, x_min, x_max, y_min, y_max, helix, helixValue);
 
   view
     .matrix({
@@ -177,7 +191,7 @@ const projections = {
   }
 };
 
-function buildProjection(name, x_min, x_max, y_min, y_max, helix) {
+function buildProjection(name, x_min, x_max, y_min, y_max, helix, helixValue) {
   let z_min = y_min,
       z_max = y_max;
 
@@ -209,10 +223,10 @@ function buildProjection(name, x_min, x_max, y_min, y_max, helix) {
 
   if (projection.helix) {
     options.helix = projection.helix;
-    options.helix = helix ? 0.01 : undefined;
+    options.helix = helixValue;
   }
 
   console.log('build', helix, options);
 
-  return mathbox[name](options);
+  return mathbox.stereographic4()[name](options);
 }

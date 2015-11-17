@@ -25,10 +25,10 @@ function model({props}, {newValue}) {
 
 function view(state$) {
   return state$
-    .map(({props: {label, unit, min, max}, value }) =>
+    .map(({props: {label, unit, min, max, step}, value }) =>
       h('div.labeled-slider', [
         h('span.label', [label]),
-        h('input.slider', {type: 'range', min, max, value}),
+        h('input.slider', {type: 'range', min, max, step, value}),
         h('span.label', [value]),
       ]));
 }
