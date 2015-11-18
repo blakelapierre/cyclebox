@@ -213,7 +213,7 @@ function addView([x_min, y_min, width, height, projection, helix, helixValue, po
       x = x + x_min;
       y = y + y_min;
 
-      if (x !== 0 && y !== 0 && x % y === 0) emit(y, x, Math.log(x));
+      if (x !== 0 && y !== 0 && x % y === 0) emit(x, y, Math.sqrt(x*y));
     };
   }
 }
