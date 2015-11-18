@@ -15,6 +15,36 @@ const defaults = {
   pointSize: 1
 };
 
+const projections = {
+  'cartesian': {
+    scale: (width, height) => [16/9, 1, 1]
+  },
+  'polar': {
+    // x: function(min, max) { return [min, Math.sqrt(max)]; },
+    x: (min, max) => [min, max],
+    range: (x_min, x_max, y_min, y_max, z_min, z_max) =>
+            [
+              [x_min * 2 * Math.PI, x_max * 2 * Math.PI],
+              [y_min, y_max],
+              [Math.round(Math.sqrt(Math.abs(z_min))), Math.round(Math.sqrt(Math.abs(z_max)))]
+            ],
+    // range: (x_min, x_max, y_min, y_max, z_min, z_max) => [[x_min, x_max], [Math.round(Math.sqrt(y_min)), Math.round(Math.sqrt(y_max))], [Math.round(Math.sqrt(z_min)), Math.round(Math.sqrt(z_max))]],
+    scale: (width, height) => [16/9, 1, 1],
+    helix: 0.01
+  },
+  'spherical': {
+    x: (min, max) => [min, Math.sqrt(max)],
+    range: (x_min, x_max, y_min, y_max, z_min, z_max) =>
+            [
+              [x_min, x_max],
+              [y_min, y_max],
+              [Math.log(z_min), Math.log(z_max)]
+              // [Math.round(Math.sqrt(z_min)), Math.round(Math.sqrt(z_max))]
+            ],
+    scale: (width, height) => [16/9, 1, 1]
+  }
+};
+
 const {xMin, yMin, width, height, projection, helix, helixValue, pointSize} = defaults;
 
 export function intent(DOM) {
@@ -67,11 +97,11 @@ export function view(state) {
     return h('div', [
       h('labeled-slider#xMin', {
         key: 1, label: 'xMin',
-        min: -Math.pow(2, 5), initial: xMin, max: Math.pow(2, 5)
+        min: -Math.pow(2, 10), initial: xMin, max: Math.pow(2, 10)
       }),
       h('labeled-slider#yMin', {
         key: 2, label: 'yMin',
-        min: -Math.pow(2, 5), initial: yMin, max: Math.pow(2, 5)
+        min: -Math.pow(2, 10), initial: yMin, max: Math.pow(2, 10)
       }),
       h('labeled-slider#width', {
         key: 3, label: 'width',
@@ -116,13 +146,13 @@ export function main({DOM}) {
 export const dependencies = components;
 
 
-var mathbox = mathBox({
+const mathbox = mathBox({
   plugins: ['core', 'controls', 'cursor', 'stats'],
   controls: {
     klass: THREE.OrbitControls
   },
 });
-var three = mathbox.three;
+const three = mathbox.three;
 
 // three.camera.position.set(-5, 5, 0);
 
@@ -134,15 +164,15 @@ const camera = mathbox.camera({
   fov: 60
 });
 
-function clear() {
-  var view = mathbox.select('');
-
-  if (view.length > 0) view.remove();
-}
-
 function setView(config) {
   clear();
   addView(config);
+}
+
+function clear() {
+  const view = mathbox.select('');
+
+  if (view.length > 0) view.remove();
 }
 
 function addView([x_min, y_min, width, height, projection, helix, helixValue, pointSize]) {
@@ -177,46 +207,16 @@ function addView([x_min, y_min, width, height, projection, helix, helixValue, po
       zWrite: false,
       zTest: false,
     });
-}
 
-function divisors(x_min, y_min) {
-  return (emit, x, y, i, j, t) => {
-    x = x + x_min;
-    y = y + y_min;
+  function divisors(x_min, y_min) {
+    return (emit, x, y, i, j, t) => {
+      x = x + x_min;
+      y = y + y_min;
 
-    if (x !== 0 && y !== 0 && x % y === 0) emit(x, y, Math.log(x));
-  };
-}
-
-const projections = {
-  'cartesian': {
-    scale: (width, height) => [16/9, 1, 1]
-  },
-  'polar': {
-    // x: function(min, max) { return [min, Math.sqrt(max)]; },
-    x: (min, max) => [min, max],
-    range: (x_min, x_max, y_min, y_max, z_min, z_max) =>
-            [
-              [x_min * 2 * Math.PI, x_max * 2 * Math.PI],
-              [y_min, y_max],
-              [Math.round(Math.sqrt(Math.abs(z_min))), Math.round(Math.sqrt(Math.abs(z_max)))]
-            ],
-    // range: (x_min, x_max, y_min, y_max, z_min, z_max) => [[x_min, x_max], [Math.round(Math.sqrt(y_min)), Math.round(Math.sqrt(y_max))], [Math.round(Math.sqrt(z_min)), Math.round(Math.sqrt(z_max))]],
-    scale: (width, height) => [16/9, 1, 1],
-    helix: 0.01
-  },
-  'spherical': {
-    x: (min, max) => [min, Math.sqrt(max)],
-    range: (x_min, x_max, y_min, y_max, z_min, z_max) =>
-            [
-              [x_min, x_max],
-              [y_min, y_max],
-              [Math.log(z_min), Math.log(z_max)]
-              // [Math.round(Math.sqrt(z_min)), Math.round(Math.sqrt(z_max))]
-            ],
-    scale: (width, height) => [16/9, 1, 1]
+      if (x !== 0 && y !== 0 && x % y === 0) emit(y, x, Math.log(x));
+    };
   }
-};
+}
 
 function buildProjection(name, x_min, x_max, y_min, y_max, helix, helixValue) {
   let z_min = y_min,
